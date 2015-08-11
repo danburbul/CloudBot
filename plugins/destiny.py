@@ -11,36 +11,31 @@ def load_api(bot):
     HEADERS = {"X-API-Key":api_key}
 
 @hook.command('item')
-def itemsearch(text, bot):
-
-    item = text.strip()
-
-    itemquery = 'https://www.bungie.net/platform/Destiny/Explorer/Items?name=' + item
-
+def item_search(text, bot):
+    """ Expects the tex to be a valid object in the Destiny database
+       Returns the item's name and description.
+       TODO: Implement error checking
+   """
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
-
     HEADERS = {"X-API-Key":api_key}
-
-    r = requests.get(itemquery, headers=HEADERS);
-
-    ItemResult = r.json()
-
-    itemHash = ItemResult['Response']['data']['itemHashes']
-
-    itemHash2 = str(itemHash)
+ 
+    item = text.strip()
+    itemquery = 'https://www.bungie.net/platform/Destiny/Explorer/Items?name=' + item
+    itemHash = requests.get(
+        itemquery, headers=HEADERS).json()['Response']['data']['itemHashes'][0];
+ 
+    output = []
+    for item in itemHash:        
+        itemquery = 'https://www.bungie.net/platform/Destiny/Manifest/inventoryItem/' + str(itemHash)
+        result = requests.get(
+            itemquery, headers=HEADERS).json()['Response']['data']['inventoryItem'];
+ 
+        output.append('Item: {}. Description: {}'.format(
+            result['itemName'],
+            result['itemDescription']
+        ))
+    return output
     
-    itemHash3 = itemHash2.lstrip('[')
-
-    itemHash4 = itemHash3.rstrip(']')
-
-    itemquery2 = 'https://www.bungie.net/platform/Destiny/Manifest/inventoryItem/' + str(itemHash4)
-
-    r = requests.get(itemquery2, headers=HEADERS);
-
-    ItemResult2 = r.json()
-
-    return ItemResult2['Response']['data']['inventoryItem']['itemName'] + ' - ' + ItemResult2['Response']['data']['inventoryItem']['itemDescription']
-
 @hook.command('nightfall')
 def nightfall(bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
