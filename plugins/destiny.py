@@ -3,7 +3,7 @@ import json
 
 from cloudbot import hook
 
-dict = {2697969178: "The Devil\'s Lair", 4175179544: "The Shadow Thief"}
+classTypeName = {0: "Titan", 1: "Hunter", 2: "Warlock", 3:''}
 
 @hook.on_start()
 def load_api(bot):
@@ -22,19 +22,23 @@ def item_search(text, bot):
     item = text.strip()
     itemquery = 'https://www.bungie.net/platform/Destiny/Explorer/Items?name=' + item
     itemHash = requests.get(
-        itemquery, headers=HEADERS).json()['Response']['data']['itemHashes'][0];
+        itemquery, headers=HEADERS).json()['Response']['data']['itemHashes'];
  
     output = []
     for item in itemHash:        
-        itemquery = 'https://www.bungie.net/platform/Destiny/Manifest/inventoryItem/' + str(itemHash)
+        itemquery = 'https://www.bungie.net/platform/Destiny/Manifest/inventoryItem/' + str(item)
         result = requests.get(
             itemquery, headers=HEADERS).json()['Response']['data']['inventoryItem'];
  
-        output.append('Item: {}. Description: {}'.format(
+        output.append('\x02{} \x02({} {} {}) - \x1D{}\x1D - http://www.destinydb.com/items/{}'.format(
             result['itemName'],
-            result['itemDescription']
+            result['tierTypeName'],
+            result['classType'],
+            result['itemTypeName'],
+            result['itemDescription'],
+            result['itemHash']
         ))
-    return output
+    return output[:3]
     
 @hook.command('nightfall')
 def nightfall(bot):
