@@ -42,26 +42,29 @@ def item_search(text, bot):
     
 @hook.command('nightfall')
 def nightfall(bot):
-    api_key = bot.config.get("api_keys", {}).get("destiny", None)
-
-    HEADERS = {"X-API-Key":api_key}
-
-    r = requests.get("https://www.bungie.net/platform/destiny/advisors/?definitions=true", headers=HEADERS);
-
-    nightfallActivityHash = r.json()
-
-    nightfallActivityId = str(nightfallActivityHash['Response']['data']['nightfallActivityHash'])
-
-    r = requests.get("https://www.bungie.net/platform/destiny/manifest/activity/" + nightfallActivityId + "/?definitions=true", headers=HEADERS);
-
-    nightfallDefinition = r.json()
-
-    nightfallModifierArrayLength = len(nightfallDefinition['Response']['data']['activity']['skulls'])
-
-    if nightfallModifierArrayLength == 5:
-        return nightfallDefinition['Response']['data']['activity']['activityName'] + ' - ' + nightfallDefinition['Response']['data']['activity']['activityDescription'] + ' | Modifiers: ' + nightfallDefinition['Response']['data']['activity']['skulls'][1]['displayName'] + ', ' + nightfallDefinition['Response']['data']['activity']['skulls'][2]['displayName'] + ', ' + nightfallDefinition['Response']['data']['activity']['skulls'][3]['displayName']
+    HEADERS = {"X-API-Key": bot.config.get("api_keys", {}).get("destiny", None)}
+ 
+    result = requests.get(
+        'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
+        headers=HEADERS).json()
+    nightfallActivityId = str(result['Response']['data']['nightfallActivityHash'])
+ 
+    result = requests.get(
+        'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
+        .format(nightfallActivityId),
+        headers=HEADERS).json()
+    nightfallDefinition = result.json()['Response']['data']['activity']
+ 
+    if len(nightfallDefinition['skulls']) == 5:
+        return '{} - {} | Modifiers: {}, {}, {}'.format(
+            nightfallDefinition['activityName'],
+            nightfallDefinition['activityDescription'],
+            nightfallDefinition['skulls'][1]['displayName'],
+            nightfallDefinition['skulls'][2]['displayName'],
+            nightfallDefinition['skulls'][3]['displayName']
+        )
     else:
-        return "weylin lied to me, get good scrub."
+        return 'weylin lied to me, get good scrub.'
 
 @hook.command('weekly')
 def weekly(bot):
