@@ -142,7 +142,9 @@ def triumph2(text, bot):
 #            userName, ', '.join(remaining))
     output = []
     for membershipType in userHash:
-        triumphHash = str(triumphHash['complete'])    	
+        triumphHash = 'triumphHash['complete']'
+        result = requests.get(
+            triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs']
     
     if len(remaining) == 0:
         output.append('\x02{}\'s\x02 Year One Triumph is complete!'.format(
