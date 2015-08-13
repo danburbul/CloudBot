@@ -64,8 +64,8 @@ def nightfall(bot):
 
 @hook.command('weekly')
 def weekly(bot):
-   
-    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+    api_key = bot.config.get("api_keys", {}).get("destiny", None)
+    HEADERS = {"X-API-Key":api_key}
     
     weeklyHeroicId = get(
         'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
@@ -88,8 +88,8 @@ def weekly(bot):
         
 @hook.command('triumph')
 def triumph(text, bot):
- 
-    HEADERS = {"X-API-Key": bot.config.get("api_keys", {}).get("destiny", None)}
+    api_key = bot.config.get("api_keys", {}).get("destiny", None)
+    HEADERS = {"X-API-Key":api_key}
     
     triumphText = [
         '\x02Apprentice of Light\x02 (Max Level)',
