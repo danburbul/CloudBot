@@ -143,8 +143,7 @@ def triumph2(text, bot):
 
     output = []
     for membershipType in userHash:
-        triumphHash = requests.get(
-            "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
+        triumphHash = "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
         result = requests.get(
             triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs'];
     
