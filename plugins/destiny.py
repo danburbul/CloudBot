@@ -92,54 +92,6 @@ def weekly(bot):
         )
     else:
         return 'weylin lied to me, get good scrub.'
-
-@hook.command('triumph')
-def triumph(text, bot):
-    api_key = bot.config.get("api_keys", {}).get("destiny", None)
-    HEADERS = {"X-API-Key":api_key}
-    
-    id = text.strip()
-
-    r = requests.get("http://www.bungie.net/Platform/User/SearchUsers/?q=" + str(id), headers=HEADERS);
-
-    userID = r.json()
-
-    userIDHash = userID['Response'][0]['membershipId']
-    userName = userID['Response'][0]['displayName']
-
-    r = requests.get("https://www.bungie.net/platform/User/GetBungieAccount/" + str(userIDHash) + "/254/", headers=HEADERS);
- 
-    userHash = r.json()
-
-    membershipType =  userHash['Response']['destinyAccounts'][0]['userInfo']['membershipType']
-
-    membershipId = userHash['Response']['destinyAccounts'][0]['userInfo']['membershipId']
-
-    membershipType2 = str(membershipType)
-    membershipId2 = str(membershipId)
-
-    r = requests.get("https://www.bungie.net/platform/Destiny/" + membershipType2 + "/Account/" + membershipId2 + "/Triumphs/", headers=HEADERS);
-
-    triumphHash = r.json()
-
-    triumph0 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][0]['complete']
-    triumph1 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][1]['complete']
-    triumph2 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][2]['complete']
-    triumph3 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][3]['complete']
-    triumph4 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][4]['complete']
-    triumph5 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][5]['complete']
-    triumph6 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][6]['complete']
-    triumph7 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][7]['complete']
-    triumph8 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][8]['complete']
-    triumph9 = triumphHash['Response']['data']['triumphSets'][0]['triumphs'][9]['complete']
-
-    triumphcheck = triumph0 + triumph1 + triumph2 + triumph3 + triumph4 + triumph5 + triumph6 + triumph7 + triumph8 + triumph9
-    triumphStatus = int(triumphcheck)
-
-    if triumphStatus == 10:
-        return userName + "\'s Year One Triumph is complete!"
-    else:
-        return userName + "\'s Year One Triumph is not complete!"
         
 @hook.command('triumph2')
 def triumph2(text, bot):
@@ -147,16 +99,16 @@ def triumph2(text, bot):
     HEADERS = {"X-API-Key":api_key}
     
     triumphText = [
-        'Apprentice of Light (Max Level)',
-        'Light of the Garden (Main Story Complete)',
-        'Light in the Dark (The Dark Below Complete)',
-        'Light of the Reef (House of Wolves Complete)',
-        'Bane of Skolas (PoE 35 Complete)',
-        'Bane of Atheon (HM VoG Complete)',
-        'Bane of Crota (HM CE Complete)',
-        'Public Servant (50 Public Events Complete)',
-        'Crucible Gladiator (Win 100 Crucible Matches)',
-        'Chest Hunter (Found 20 Golden Chests)',       
+        '\x02Apprentice of Light\x02 (Max Level)',
+        '\x02Light of the Garden\x02 (Main Story Complete)',
+        '\x02Light in the Dark\x02 (The Dark Below Complete)',
+        '\x02Light of the Reef\x02 (House of Wolves Complete)',
+        '\x02Bane of Skolas\x02 (PoE 35 Complete)',
+        '\x02Bane of Atheon\x02 (HM VoG Complete)',
+        '\x02Bane of Crota\x02 (HM CE Complete)',
+        '\x02Public Servant\x02 (50 Public Events Complete)',
+        '\x02Crucible Gladiator\x02 (Win 100 Crucible Matches)',
+        '\x02Chest Hunter\x02 (Found 20 Golden Chests)',       
     ]
 
     userID = requests.get(
@@ -184,9 +136,9 @@ def triumph2(text, bot):
             remaining.append(triumphText[i])
 
     if len(remaining) == 0:
-        return "{}\'s Year One Triumph is complete!".format(userName)
+        return "\x02{}\'s\x02 Year One Triumph is complete!".format(userName)
     else:
-        return "{}\'s Year One Triumph is not complete. Remaining task(s): {}".format(
+        return "\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}".format(
             userName, ', '.join(remaining))
 
 @hook.command('xur')
