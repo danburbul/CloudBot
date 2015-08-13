@@ -140,11 +140,13 @@ def triumph2(text, bot):
 #    else:
 #        return "\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}".format(
 #            userName, ', '.join(remaining))
+
     output = []
     for membershipType in userHash:
-        triumphHash = triumphHash['Response']['data']['triumphSets']
+        triumphHash = requests.get(
+            "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
         result = requests.get(
-            triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs']
+            triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs'];
     
     if len(remaining) == 0:
         output.append('\x02{}\'s\x02 Year One Triumph is complete!'.format(
