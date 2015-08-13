@@ -13,7 +13,7 @@ def item_search(text, bot):
    """
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
- 
+    
     item = text.strip()
     itemquery = 'https://www.bungie.net/platform/Destiny/Explorer/Items?name=' + item
     itemHash = requests.get(
