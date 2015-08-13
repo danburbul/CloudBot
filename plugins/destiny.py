@@ -67,11 +67,11 @@ def weekly(bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
     
-    weeklyHeroicId = get(
+    weeklyHeroicId = requests.get(
         'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
         headers=HEADERS).json()['Response']['data']['heroicStrike']['activityBundleHash']
  
-    weeklyHeroicDefinition = get(
+    weeklyHeroicDefinition = requests.get(
         'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
         .format(weeklyHeroicId),
         headers=HEADERS).json()['Response']['data']['activity']
