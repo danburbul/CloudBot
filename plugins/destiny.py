@@ -30,10 +30,10 @@ def item_search(text, bot):
         result = requests.get(
             itemquery, headers=HEADERS).json()['Response']['data']['inventoryItem'];
  
-        output.append('\x02{} \x02({} {} {}) - \x1D{}\x1D - http://www.destinydb.com/items/{}'.format(
+        output.append('\x02{}\x02 ({} {} {}) - \x1D{}\x1D - http://www.destinydb.com/items/{}'.format(
             result['itemName'],
             result['tierTypeName'],
-            result['classType'],
+            result['classType'].classId(),
             result['itemTypeName'],
             result['itemDescription'],
             result['itemHash']
@@ -42,7 +42,8 @@ def item_search(text, bot):
     
 @hook.command('nightfall')
 def nightfall(bot):
-    HEADERS = {"X-API-Key": bot.config.get("api_keys", {}).get("destiny", None)}
+    api_key = bot.config.get("api_keys", {}).get("destiny", None)
+    HEADERS = {"X-API-Key":api_key}
  
     result = requests.get(
         'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
@@ -56,7 +57,7 @@ def nightfall(bot):
     nightfallDefinition = result.json()['Response']['data']['activity']
  
     if len(nightfallDefinition['skulls']) == 5:
-        return '{} - {} | Modifiers: {}, {}, {}'.format(
+        return '/x02{}/x02 - /x1D{}/x1D /x02Modifiers:/x02 {}, {}, {}'.format(
             nightfallDefinition['activityName'],
             nightfallDefinition['activityDescription'],
             nightfallDefinition['skulls'][1]['displayName'],
@@ -69,32 +70,33 @@ def nightfall(bot):
 @hook.command('weekly')
 def weekly(bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
-
     HEADERS = {"X-API-Key":api_key}
+ 
+    result = requests.get(
+        'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
+        headers=HEADERS).json()
+    weeklyHeroicId = str(result['Response']['data']['heroicStrike']['activityBundleHash'])
 
-    r = requests.get("https://www.bungie.net/platform/destiny/advisors/?definitions=true", headers=HEADERS);
-
-    weeklyHeroicActivityHash = r.json()
-
-    weeklyHeroicId = str(weeklyHeroicActivityHash['Response']['data']['heroicStrike']['activityBundleHash'])
-
-    r = requests.get("https://www.bungie.net/platform/destiny/manifest/activity/" + weeklyHeroicId + "/?definitions=true", headers=HEADERS);
-
-    weeklyHeroicDefinition = r.json()
-
-    weeklyHeroicModifierArrayLength = len(weeklyHeroicDefinition['Response']['data']['activity']['skulls'])
-
-    if weeklyHeroicModifierArrayLength == 2:
-        return weeklyHeroicDefinition['Response']['data']['activity']['activityName'] + ' - ' + weeklyHeroicDefinition['Response']['data']['activity']['activityDescription'] + ' | Modifiers: ' + weeklyHeroicDefinition['Response']['data']['activity']['skulls'][1]['displayName']
+    result = requests.get(
+        'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
+        .format(weeklyHeroicId),
+        headers=HEADERS).json()
+    weeklyHeroicDefinition = result.json()['Response']['data']['activity']
+    weeklyHeroicSkullIndex = result.json()['Response']['data']['activity']['skulls']
+    
+    if len(weeklyHeroicSkullIndex) == 2:
+        return '/x02{}/x02 - /x1D{}/x1D /x02Modifier:/x02 {}'.format(
+            weeklyHeroicDefinition['Response']['data']['activity']['activityName'] ,
+            weeklyHeroicDefinition['Response']['data']['activity']['activityDescription'] ,
+            weeklyHeroicDefinition['Response']['data']['activity']['skulls'][1]['displayName']
+        )
     else:
-        return "weylin lied to me, get good scrub."
+        return 'weylin lied to me, get good scrub.'
 
 @hook.command('triumph')
 def triumph(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
-
     HEADERS = {"X-API-Key":api_key}
-
     
     id = text.strip()
 
@@ -138,6 +140,46 @@ def triumph(text, bot):
         return userName + "\'s Year One Triumph is complete!"
     else:
         return userName + "\'s Year One Triumph is not complete!"
+        
+@hook.command('triumph2')
+def triumph2(text, bot):
+
+    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+    triumphText = [
+        'number1',
+        'number2',
+        'etc'
+    ]
+
+    userID = requests.get(
+        "http://www.bungie.net/Platform/User/SearchUsers/?q={}"
+        .format(text.strip()),
+        headers=HEADERS).json()['Response'][0]
+    userIDHash = userID['membershipId']
+    userName = userID['displayName']
+
+    userHash = requests.get(
+        "https://www.bungie.net/platform/User/GetBungieAccount/{}/254/"
+        .format(str(userIDHash)),
+        headers=HEADERS).json()['Response']['destinyAccounts'][0]['userInfo']
+    membershipType = str(userHash['membershipType'])
+    membershipId = str(userHash['membershipId'])
+
+    triumphHash = requests.get(
+        "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
+        .format(membershipType, membershipId),
+        headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs']
+
+    remaining = []
+    for i in range(10):
+        if not triumphHash[i]['complete']:
+            remaining.append(triumphText[i])
+
+    if len(remaining) == 0:
+        return "{}\'s Year One Triumph is complete!".format(userName)
+    else:
+        return "{}\'s Year One Triumph is not complete. Remaining task(s): {}".format(
+            userName, ', '.join(remaining))
 
 @hook.command('xur')
 def xur(text, bot):
@@ -215,6 +257,37 @@ def xur(text, bot):
     xurExoticName41 = str(xurStock['Response']['definitions']['items'][xurExoticHash4]['itemTypeName'])
 
     return '\x030,1 Armor \x030,14 ' + xurExoticName01 + ' (' + xurExoticStatName01[:3] + ': ' + xurExoticStatValue01 + ', ' + xurExoticStatName02[:3] + ': ' + xurExoticStatValue02 + ', ' + xurExoticStatName03[:3] + ': ' + xurExoticStatValue03 + ')' + ', ' + xurExoticName11 + ' (' + xurExoticStatName11[:3] + ': ' + xurExoticStatValue11 + ', ' + xurExoticStatName12[:3] + ': ' + xurExoticStatValue12 + ', ' + xurExoticStatName13[:3] + ': ' + xurExoticStatValue13 + ')' + ', ' + xurExoticName21 + ' (' + xurExoticStatName21[:3] + ': ' + xurExoticStatValue21 + ', ' + xurExoticStatName22[:3] + ': ' + xurExoticStatValue22 + ', ' + xurExoticStatName23[:3] + ': ' + xurExoticStatValue23 + ') ' + '\x030,1 Weapon \x030,14 ' + xurExoticName31 + ' \x030,1 Engram \x030,14 ' + xurExoticName41
+    
+@hook.command('xur2')
+def xur2(text, bot):
+
+    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+
+    xurStock = requests.get(
+        "https://www.bungie.net/platform/Destiny/Advisors/Xur/?definitions=true",
+        headers=HEADERS).json()['Response']
+
+    hashes = xurStock['data']['saleItemCategories'][0]['saleItems']
+    text = xurStock['definitions']
+
+    armor_list = []
+    for i in range(3):
+        exotic = '{} ({}: {}, {}: {}, {}: {})'.format(
+            text['items'][hashes[i]['item']['itemHash']]['itemName'],
+            text['definitions']['stats'][hashes[i]['item']['stats'][1]['statHash']]['statName'][:3],
+            hashes[i]['item']['stats'][1]['value'],
+            text['definitions']['stats'][hashes[i]['item']['stats'][2]['statHash']]['statName'][:3],
+            hashes[i]['item']['stats'][2]['value'],
+            text['definitions']['stats'][hashes[i]['item']['stats'][3]['statHash']]['statName'][:3],
+            hashes[i]['item']['stats'][3]['value']
+        )
+        armor_list.append(exotic)
+    weapon = text['items'][hashes[3]['item']['itemHash']]['itemName']
+    engram = text['items'][hashes[4]['item']['itemHash']]['itemName']
+
+    return '\x030,1 Armor \x030,14 {}; \x030,1 Weapon \x030,14 {}; \x030,1 Engram \x030,14 {}'.format(
+        ', '.join(armor_list), weapon, engram)    
+
 
 
 
