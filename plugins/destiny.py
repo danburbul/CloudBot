@@ -142,7 +142,7 @@ def triumph2(text, bot):
 #            userName, ', '.join(remaining))
     output = []
     for membershipType in userHash:
-        membershipType = str(userHash['membershipType'])    	
+        triumphHash = str(triumphHash['complete'])    	
     
     if len(remaining) == 0:
         output.append('\x02{}\'s\x02 Year One Triumph is complete!'.format(
@@ -152,7 +152,7 @@ def triumph2(text, bot):
     	  output.append('\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}'.format(
             userName, ', '.join(remaining))
         )
-    return output[:2]
+		return output[:2]
 
 @hook.command('xur')
 def xur(text, bot):
