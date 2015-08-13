@@ -5,11 +5,6 @@ from cloudbot import hook
 
 classTypeName = {0: "Titan", 1: "Hunter", 2: "Warlock", 3:''}
 
-@hook.on_start()
-def load_api(bot):
-    api_key = bot.config.get("api_keys", {}).get("destiny", None)
-    HEADERS = {"X-API-Key":api_key}
-
 @hook.command('item')
 def item_search(text, bot):
     """ Expects the tex to be a valid object in the Destiny database
