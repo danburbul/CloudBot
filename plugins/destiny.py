@@ -143,8 +143,9 @@ def triumph(text, bot):
         
 @hook.command('triumph2')
 def triumph2(text, bot):
-
-    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+    api_key = bot.config.get("api_keys", {}).get("destiny", None)
+    HEADERS = {"X-API-Key":api_key}
+    
     triumphText = [
         'number1',
         'number2',
@@ -184,7 +185,6 @@ def triumph2(text, bot):
 @hook.command('xur')
 def xur(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
-
     HEADERS = {"X-API-Key":api_key}
 
     r = requests.get("https://www.bungie.net/platform/Destiny/Advisors/Xur/?definitions=true", headers=HEADERS);
@@ -260,8 +260,8 @@ def xur(text, bot):
     
 @hook.command('xur2')
 def xur2(text, bot):
-
-    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+    api_key = bot.config.get("api_keys", {}).get("destiny", None)
+    HEADERS = {"X-API-Key":api_key}
 
     xurStock = requests.get(
         "https://www.bungie.net/platform/Destiny/Advisors/Xur/?definitions=true",
