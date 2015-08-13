@@ -151,7 +151,7 @@ def triumph2(text, bot):
     else:
     	  output.append('\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}'.format(
             userName, ', '.join(remaining))
-        ))
+        )
 		return output[:2]
 
 @hook.command('xur')
