@@ -86,9 +86,9 @@ def weekly(bot):
     
     if len(weeklyHeroicSkullIndex) == 2:
         return '\x02{}\x02 - \x1D{}\x1D \x02Modifier:\x02 {}'.format(
-            weeklyHeroicDefinition['Response']['data']['activity']['activityName'] ,
-            weeklyHeroicDefinition['Response']['data']['activity']['activityDescription'] ,
-            weeklyHeroicDefinition['Response']['data']['activity']['skulls'][1]['displayName']
+            weeklyHeroicDefinition['activityName'] ,
+            weeklyHeroicDefinition['activityDescription'] ,
+            weeklyHeroicDefinition['skulls'][1]['displayName']
         )
     else:
         return 'weylin lied to me, get good scrub.'
