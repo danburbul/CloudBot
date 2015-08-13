@@ -69,35 +69,33 @@ def nightfall(bot):
 
 @hook.command('weekly')
 def weekly(bot):
-    api_key = bot.config.get("api_keys", {}).get("destiny", None)
-    HEADERS = {"X-API-Key":api_key}
- 
-    result = requests.get(
+   
+    HEADERS = {"X-API-Key": api_key = bot.config.get("api_keys", {}).get("destiny", None)}
+    
+    weeklyHeroicId = get(
         'https://www.bungie.net/platform/destiny/advisors/?definitions=true',
-        headers=HEADERS).json()
-    weeklyHeroicId = str(result['Response']['data']['heroicStrike']['activityBundleHash'])
-
-    result = requests.get(
+        headers=HEADERS).json()['Response']['data']['heroicStrike']['activityBundleHash']
+ 
+    weeklyHeroicDefinition = get(
         'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
         .format(weeklyHeroicId),
-        headers=HEADERS).json()
-    weeklyHeroicDefinition = result['Response']['data']['activity']
-    weeklyHeroicSkullIndex = result['Response']['data']['activity']['skulls']
-    
+        headers=HEADERS).json()['Response']['data']['activity']
+    weeklyHeroicSkullIndex = weeklyHeroicDefinition['skulls']
+ 
     if len(weeklyHeroicSkullIndex) == 2:
         return '\x02{}\x02 - \x1D{}\x1D \x02Modifier:\x02 {}'.format(
-            weeklyHeroicDefinition['activityName'] ,
-            weeklyHeroicDefinition['activityDescription'] ,
+            weeklyHeroicDefinition['activityName'],
+            weeklyHeroicDefinition['activityDescription'],
             weeklyHeroicDefinition['skulls'][1]['displayName']
         )
     else:
         return 'weylin lied to me, get good scrub.'
         
-@hook.command('triumph2')
-def triumph2(text, bot):
-    api_key = bot.config.get("api_keys", {}).get("destiny", None)
-    HEADERS = {"X-API-Key":api_key}
-
+@hook.command('triumph')
+def triumph(text, bot):
+ 
+    HEADERS = {"X-API-Key": bot.config.get("api_keys", {}).get("destiny", None)}
+    
     triumphText = [
         '\x02Apprentice of Light\x02 (Max Level)',
         '\x02Light of the Garden\x02 (Main Story Complete)',
@@ -110,55 +108,46 @@ def triumph2(text, bot):
         '\x02Crucible Gladiator\x02 (Win 100 Crucible Matches)',
         '\x02Chest Hunter\x02 (Found 20 Golden Chests)',
     ]
-
-    userID = requests.get(
+ 
+    userID = get(
         "http://www.bungie.net/Platform/User/SearchUsers/?q={}"
         .format(text.strip()),
         headers=HEADERS).json()['Response'][0]
     userIDHash = userID['membershipId']
     userName = userID['displayName']
-
-    userHash = requests.get(
+ 
+    userHash = get(
         "https://www.bungie.net/platform/User/GetBungieAccount/{}/254/"
         .format(str(userIDHash)),
         headers=HEADERS).json()['Response']['destinyAccounts'][0]['userInfo']
-    membershipType = str(userHash['membershipType'])
-    membershipId = str(userHash['membershipId'])
-
-    triumphHash = requests.get(
-        "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
-        .format(membershipType, membershipId),
-        headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs']
-
-    remaining = []
-    for i in range(10):
-        if not triumphHash[i]['complete']:
-            remaining.append(triumphText[i])
-
-#    if len(remaining) == 0:
-#        return "\x02{}\'s\x02 Year One Triumph is complete!".format(userName)
-#    else:
-#        return "\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}".format(
-#            userName, ', '.join(remaining))
-
+    membershipType = userHash['membershipType']
+    membershipId = userHash['membershipId']
+ 
+    consoles = ['Xbox', 'Playstation']
     output = []
-    for membershipType in userHash:
-        triumphHash = 'https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/'.format(
-            membershipType,
-            membershipId
-            )
-        result = requests.get(
-            triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs'];
-    
-    if len(remaining) == 0:
-        output.append('\x02{}\'s\x02 Year One Triumph is complete!'.format(
-            result['userName']
-        ))
-    else:
-    	  output.append('\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}'.format(
-            userName, ', '.join(remaining))
-        )
-    return output[:2]
+    for membership in membershipType:
+        triumphHash = get(
+            "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
+            .format(membership, membershipId),
+            headers=HEADERS
+        ).json()['Response']['data']['triumphSets'][0]['triumphs']
+ 
+        remaining = []
+        for i in range(10):
+            if not triumphHash[i]['complete']:
+                remaining.append(triumphText[i])
+ 
+        if len(remaining) == 0:
+            output.append(
+                "\x02{}\'s\x02 Year One Triumph is complete on {}!".format(
+                    userName, consoles[membership]))
+        else:
+            output.append(
+                "\x02{}\'s\x02 Year One Triumph is not complete on {}. "
+                "\x02Remaining task(s):\x02 {}".format(
+                    userName, consoles[membership], ', '.join(remaining)))
+ 
+    return output
 
 @hook.command('xur')
 def xur(text, bot):
