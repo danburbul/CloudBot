@@ -142,7 +142,7 @@ def triumph2(text, bot):
 #            userName, ', '.join(remaining))
     output = []
     for membershipType in userHash:
-        triumphHash = 'triumphHash['complete']'
+        triumphHash = triumphHash['complete']
         result = requests.get(
             triumphHash, headers=HEADERS).json()['Response']['data']['triumphSets'][0]['triumphs']
     
