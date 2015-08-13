@@ -54,7 +54,7 @@ def nightfall(bot):
         'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
         .format(nightfallActivityId),
         headers=HEADERS).json()
-    nightfallDefinition = result.json()['Response']['data']['activity']
+    nightfallDefinition = result['Response']['data']['activity']
  
     if len(nightfallDefinition['skulls']) == 5:
         return '/x02{}/x02 - /x1D{}/x1D /x02Modifiers:/x02 {}, {}, {}'.format(
@@ -81,8 +81,8 @@ def weekly(bot):
         'https://www.bungie.net/platform/destiny/manifest/activity/{}/?definitions=true'
         .format(weeklyHeroicId),
         headers=HEADERS).json()
-    weeklyHeroicDefinition = result.json()['Response']['data']['activity']
-    weeklyHeroicSkullIndex = result.json()['Response']['data']['activity']['skulls']
+    weeklyHeroicDefinition = result['Response']['data']['activity']
+    weeklyHeroicSkullIndex = result['Response']['data']['activity']['skulls']
     
     if len(weeklyHeroicSkullIndex) == 2:
         return '/x02{}/x02 - /x1D{}/x1D /x02Modifier:/x02 {}'.format(
