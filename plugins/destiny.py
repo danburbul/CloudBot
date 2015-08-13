@@ -149,7 +149,14 @@ def triumph2(text, bot):
     triumphText = [
         'number1',
         'number2',
-        'etc'
+        'number3',
+        'number4',
+        'number5',
+        'number6',
+        'number7',
+        'number8',
+        'number9',
+        'number10',        
     ]
 
     userID = requests.get(
