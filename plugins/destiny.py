@@ -104,14 +104,14 @@ def triumph(text, bot):
         '\x02Chest Hunter\x02 (Found 20 Golden Chests)',
     ]
  
-    userID = get(
+    userID = requests.get(
         "http://www.bungie.net/Platform/User/SearchUsers/?q={}"
         .format(text.strip()),
         headers=HEADERS).json()['Response'][0]
     userIDHash = userID['membershipId']
     userName = userID['displayName']
  
-    userHash = get(
+    userHash = requests.get(
         "https://www.bungie.net/platform/User/GetBungieAccount/{}/254/"
         .format(str(userIDHash)),
         headers=HEADERS).json()['Response']['destinyAccounts'][0]['userInfo']
@@ -121,7 +121,7 @@ def triumph(text, bot):
     consoles = ['Xbox', 'Playstation']
     output = []
     for membership in membershipType:
-        triumphHash = get(
+        triumphHash = requests.get(
             "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
             .format(membership, membershipId),
             headers=HEADERS
