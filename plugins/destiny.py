@@ -147,16 +147,16 @@ def triumph2(text, bot):
     HEADERS = {"X-API-Key":api_key}
     
     triumphText = [
-        'number1',
-        'number2',
-        'number3',
-        'number4',
-        'number5',
-        'number6',
-        'number7',
-        'number8',
-        'number9',
-        'number10',        
+        'Apprentice of Light (Max Level)',
+        'Light of the Garden (Main Story Complete)',
+        'Light in the Dark (The Dark Below Complete)',
+        'Light of the Reef (House of Wolves Complete)',
+        'Bane of Skolas (PoE 35 Complete)',
+        'Bane of Atheon (HM VoG Complete)',
+        'Bane of Crota (HM CE Complete)',
+        'Public Servant (50 Public Events Complete)',
+        'Crucible Gladiator (Win 100 Crucible Matches)',
+        'Chest Hunter (Found 20 Golden Chests)',       
     ]
 
     userID = requests.get(
