@@ -33,7 +33,7 @@ def item_search(text, bot):
         output.append('\x02{}\x02 ({} {} {}) - \x1D{}\x1D - http://www.destinydb.com/items/{}'.format(
             result['itemName'],
             result['tierTypeName'],
-            result['classType'].classId(),
+            result['classType'],
             result['itemTypeName'],
             result['itemDescription'],
             result['itemHash']
