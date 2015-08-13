@@ -57,7 +57,7 @@ def nightfall(bot):
     nightfallDefinition = result['Response']['data']['activity']
  
     if len(nightfallDefinition['skulls']) == 5:
-        return '/x02{}/x02 - /x1D{}/x1D /x02Modifiers:/x02 {}, {}, {}'.format(
+        return '\x02{}\x02 - \x1D{}\x1D \x02Modifiers:\x02 {}, {}, {}'.format(
             nightfallDefinition['activityName'],
             nightfallDefinition['activityDescription'],
             nightfallDefinition['skulls'][1]['displayName'],
@@ -85,7 +85,7 @@ def weekly(bot):
     weeklyHeroicSkullIndex = result['Response']['data']['activity']['skulls']
     
     if len(weeklyHeroicSkullIndex) == 2:
-        return '/x02{}/x02 - /x1D{}/x1D /x02Modifier:/x02 {}'.format(
+        return '\x02{}\x02 - \x1D{}\x1D \x02Modifier:\x02 {}'.format(
             weeklyHeroicDefinition['Response']['data']['activity']['activityName'] ,
             weeklyHeroicDefinition['Response']['data']['activity']['activityDescription'] ,
             weeklyHeroicDefinition['Response']['data']['activity']['skulls'][1]['displayName']
