@@ -97,7 +97,7 @@ def weekly(bot):
 def triumph2(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
-    
+
     triumphText = [
         '\x02Apprentice of Light\x02 (Max Level)',
         '\x02Light of the Garden\x02 (Main Story Complete)',
@@ -108,7 +108,7 @@ def triumph2(text, bot):
         '\x02Bane of Crota\x02 (HM CE Complete)',
         '\x02Public Servant\x02 (50 Public Events Complete)',
         '\x02Crucible Gladiator\x02 (Win 100 Crucible Matches)',
-        '\x02Chest Hunter\x02 (Found 20 Golden Chests)',       
+        '\x02Chest Hunter\x02 (Found 20 Golden Chests)',
     ]
 
     userID = requests.get(
@@ -135,11 +135,24 @@ def triumph2(text, bot):
         if not triumphHash[i]['complete']:
             remaining.append(triumphText[i])
 
+#    if len(remaining) == 0:
+#        return "\x02{}\'s\x02 Year One Triumph is complete!".format(userName)
+#    else:
+#        return "\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}".format(
+#            userName, ', '.join(remaining))
+    output = []
+    for membershipType in userHash:
+        membershipType = str(userHash['membershipType'])    	
+    
     if len(remaining) == 0:
-        return "\x02{}\'s\x02 Year One Triumph is complete!".format(userName)
+        output.append('\x02{}\'s\x02 Year One Triumph is complete!'.format(
+            result['userName']
+        ))
     else:
-        return "\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}".format(
+    	  output.append('\x02{}\'s\x02 Year One Triumph is not complete. \x02Remaining task(s):\x02 {}'.format(
             userName, ', '.join(remaining))
+        ))
+		return output[:2]
 
 @hook.command('xur')
 def xur(text, bot):
