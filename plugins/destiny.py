@@ -30,7 +30,7 @@ def item_search(text, bot):
             result['tierTypeName'],
             result['classType'],
             result['itemTypeName'],
-            result['itemDescription'],
+            result.get('itemDescription', 'Item has no description.'),
             result['itemHash']
         ))
     return output[:3]
@@ -86,7 +86,10 @@ def weekly(bot):
     else:
         return 'weylin lied to me, get good scrub.'
         
-@hook.command('triumph')
+#@hook.command('triumph')
+# Not yet working.
+# TypeError: 'int' object is not iterable. Line 123:
+# for membership in membershipType:
 def triumph(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
@@ -115,7 +118,7 @@ def triumph(text, bot):
         "https://www.bungie.net/platform/User/GetBungieAccount/{}/254/"
         .format(str(userIDHash)),
         headers=HEADERS).json()['Response']['destinyAccounts'][0]['userInfo']
-    membershipType = userHash['membershipType']
+    membershipType = str(userHash['membershipType'])
     membershipId = userHash['membershipId']
  
     consoles = ['Xbox', 'Playstation']
