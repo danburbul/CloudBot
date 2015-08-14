@@ -86,10 +86,7 @@ def weekly(bot):
     else:
         return 'weylin lied to me, get good scrub.'
         
-#@hook.command('triumph')
-# Not yet working.
-# TypeError: 'int' object is not iterable. Line 123:
-# for membership in membershipType:
+@hook.command('triumph')
 def triumph(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
@@ -123,6 +120,7 @@ def triumph(text, bot):
  
     consoles = ['Xbox', 'Playstation']
     output = []
+    membershipType = [membershipType] if type(membershipType) == int else membershipType
     for membership in membershipType:
         triumphHash = requests.get(
             "https://www.bungie.net/platform/Destiny/{}/Account/{}/Triumphs/"
@@ -228,30 +226,31 @@ def xur2(text, bot):
     api_key = bot.config.get("api_keys", {}).get("destiny", None)
     HEADERS = {"X-API-Key":api_key}
 
-    xurStock = requests.get(
+    xurStock = get(
         "https://www.bungie.net/platform/Destiny/Advisors/Xur/?definitions=true",
         headers=HEADERS).json()['Response']
 
     hashes = xurStock['data']['saleItemCategories'][0]['saleItems']
     text = xurStock['definitions']
+    keys = [key for key in hashes]
 
     armor_list = []
     for i in range(3):
         exotic = '{} ({}: {}, {}: {}, {}: {})'.format(
-            text['items'][hashes[i]['item']['itemHash']]['itemName'],
-            text['definitions']['stats'][hashes[i]['item']['stats'][1]['statHash']]['statName'][:3],
-            hashes[i]['item']['stats'][1]['value'],
-            text['definitions']['stats'][hashes[i]['item']['stats'][2]['statHash']]['statName'][:3],
-            hashes[i]['item']['stats'][2]['value'],
-            text['definitions']['stats'][hashes[i]['item']['stats'][3]['statHash']]['statName'][:3],
-            hashes[i]['item']['stats'][3]['value']
+            text['items'][hashes[keys[i]]['item']['itemHash']]['itemName'],
+            text['definitions']['stats'][hashes[keys[i]]['item']['stats'][1]['statHash']]['statName'][:3],
+            hashes[keys[i]]['item']['stats'][1]['value'],
+            text['definitions']['stats'][hashes[keys[i]]['item']['stats'][2]['statHash']]['statName'][:3],
+            hashes[keys[i]]['item']['stats'][2]['value'],
+            text['definitions']['stats'][hashes[keys[i]]['item']['stats'][3]['statHash']]['statName'][:3],
+            hashes[keys[i]]['item']['stats'][3]['value']
         )
         armor_list.append(exotic)
-    weapon = text['items'][hashes[3]['item']['itemHash']]['itemName']
-    engram = text['items'][hashes[4]['item']['itemHash']]['itemName']
+    weapon = text['items'][hashes[keys[3]]['item']['itemHash']]['itemName']
+    engram = text['items'][hashes[keys[4]]['item']['itemHash']]['itemName']
 
     return '\x030,1 Armor \x030,14 {}; \x030,1 Weapon \x030,14 {}; \x030,1 Engram \x030,14 {}'.format(
-        ', '.join(armor_list), weapon, engram)    
+        ', '.join(armor_list), weapon, engram) 
 
 
 
