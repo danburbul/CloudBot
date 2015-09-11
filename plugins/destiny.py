@@ -9,6 +9,7 @@ BASE_URL = 'https://www.bungie.net/platform/Destiny/'
 CACHE = {}
 CLASS_TYPES = {0: "Titan ", 1: "Hunter ", 2: "Warlock ", 3: ''}
 CONSOLES = ['\x02\x033Xbox\x02\x03', '\x02\x0312Playstation\x02\x03']
+STAT_HASHES = {144602215: 'Int', 1735777505: 'Disc', 4244567218: 'Str'}
 LORE_CACHE = {}
 HEADERS = {}
 WEAPON_TYPES = ['Super', 'Melee', 'Grenade', 'AutoRifle', 'FusionRifle',
@@ -242,7 +243,10 @@ def item_search(text, bot):
 @hook.command('nightfall')
 def nightfall(text, bot):
     if CACHE.get('nightfall', None) and not text.lower() == 'flush':
-        return CACHE['nightfall']
+        if 'last' in text.lower():
+            return CACHE.get('last_nightfall', 'Unavailable')
+        else:
+            return CACHE['nightfall']
     else:
         nightfallActivityId = get(
             '{}advisors/?definitions=true'.format(BASE_URL),
@@ -263,6 +267,8 @@ def nightfall(text, bot):
                 nightfallDefinition['skulls'][3]['displayName'],
                 nightfallDefinition['skulls'][4]['displayName'],
             )
+            if output != CACHE['nightfall']:
+                CACHE['last_nightfall'] = CACHE['nightfall']
             CACHE['nightfall'] = output
             return output
         else:
@@ -272,7 +278,10 @@ def nightfall(text, bot):
 @hook.command('weekly')
 def weekly(text, bot):
     if CACHE.get('weekly', None) and not text.lower() == 'flush':
-        return CACHE['weekly']
+        if 'last' in text.lower():
+            return CACHE.get('last_weekly', 'Unavailable')
+        else:
+            return CACHE['weekly']
     else:
         weeklyHeroicId = get(
             '{}advisors/?definitions=true'.format(BASE_URL),
@@ -291,6 +300,8 @@ def weekly(text, bot):
                 weeklyHeroicDefinition['activityDescription'],
                 weeklyHeroicDefinition['skulls'][1]['displayName']
             )
+            if output != CACHE['weekly']:
+                CACHE['last_weekly'] = CACHE['weekly']
             CACHE['weekly'] = output
             return output
         else:
@@ -344,34 +355,35 @@ def triumph(text, nick, bot):
 @hook.command('xur')
 def xur(text, bot):
     if CACHE.get('xur', None) and not text.lower() == 'flush':
-        return CACHE['xur']
-    else:
-        xurStock = get(
-            "{}Advisors/Xur/?definitions=true".format(BASE_URL),
-            headers=HEADERS).json()['Response']
+        if 'last' in text.lower():
+            return CACHE.get('last_xur', 'Unavailable')
+        else:
+            return CACHE['xur']
 
-        hashes = xurStock['data']['saleItemCategories'][0]['saleItems']
-        text = xurStock['definitions']
-        exoticsHash = [hashes[i]['item'] for i in range(6)]
+    xurStock = get(
+        "{}Advisors/Xur/?definitions=true".format(BASE_URL),
+        headers=HEADERS).json()['Response']
 
-        armor_list = []
-        for i in range(3):
-            exotic = '{} ({}: {}, {}: {}, {}: {})'.format(
-                text['items'][str(exoticsHash[i]['itemHash'])]['itemName'],
-                text['stats'][str(exoticsHash[i]['stats'][1]['statHash'])]['statName'][:3],
-                exoticsHash[i]['stats'][1]['value'],
-                text['stats'][str(exoticsHash[i]['stats'][2]['statHash'])]['statName'][:3],
-                exoticsHash[i]['stats'][2]['value'],
-                text['stats'][str(exoticsHash[i]['stats'][3]['statHash'])]['statName'][:3],
-                exoticsHash[i]['stats'][3]['value']
-            )
-            armor_list.append(exotic)
-        weapon = text['items'][str(exoticsHash[3]['itemHash'])]['itemName']
-        engram = text['items'][str(exoticsHash[5]['itemHash'])]['itemTypeName']
-        output = '\x02Armor\x02 {} \x02Weapon\x02 {} \x02Engram\x02 {}'.format(
-            ', '.join(armor_list), weapon, engram)
-        CACHE['xur'] = output
-        return output
+    items = [i['item'] for i in xurStock['data']['saleItemCategories'][0]['saleItems']]
+    definitions = xurStock['definitions']['items']
+
+    output = []
+    for item in items:
+        item_def = definitions[str(item['itemHash'])]
+        stats = []
+        for stat in item['stats']:
+            if stat['statHash'] in STAT_HASHES and stat['value'] > 0:
+                stats.append("{}: {}".format(STAT_HASHES[stat['statHash']], stat['value']))
+        output.append("{}{}".format(
+            item_def['itemName'] if 'Engram' not in item_def['itemName'] else item_def['itemTypeName'],
+            " ({})".format(", ".join(stats)) if stats else ""
+        ))
+    output = ", ".join(output)
+
+    if output != CACHE.get('xur', output):
+        CACHE['last_xur'] = CACHE['xur']
+    CACHE['xur'] = output
+    return output
 
 
 @hook.command('lore')
@@ -497,6 +509,29 @@ def migrate(text, nick, bot):
         return "Sucessfully migrated! Now run the save command."
     else:
         return "Your light is not strong enough."
+
+@hook.command('purge')
+def purge(text, nick, bot):
+    membership = get_user(nick)
+    if type(membership) is not dict:
+        return membership
+    user_name = CACHE['links'].get(nick, nick)
+    output = []
+    text = "" if not text else text
+
+    if text.lower() == "xbox" and membership.get(1, False):
+        del membership[1]
+        output.append("Removed Xbox from my cache on {}.".format(user_name))
+    if text.lower() == "playstation" and membership.get(2, False):
+        del membership[2]
+        output.append("Removed Playstation from my cache on {}.".format(user_name))
+    if not text or not membership:
+        del CACHE[user_name]
+        return 'Removed {} from my cache.'.format(user_name)
+    else:
+        CACHE[user_name] = membership
+        return output if output else "Nothing to purge. WTF you doin?!"
+
 
 @hook.command('rules')
 def rules(bot):
