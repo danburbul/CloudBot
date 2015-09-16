@@ -6,7 +6,11 @@ from random import sample
 from requests import get
 from pickle import dump, load
 from feedparser import parse
+<<<<<<< HEAD
 from cloudbot.util import web, formatting
+=======
+from cloudbot.util.web import try_shorten
+>>>>>>> 0cdd26e6424d1347be785a95dfe7e82011ccc32d
 
 BASE_URL = 'https://www.bungie.net/platform/Destiny/'
 CACHE = {}
@@ -589,16 +593,25 @@ def the100(bot):
 def clan(bot):
     return 'Check out our Clan: https://www.bungie.net/en/Clan/Detail/939927'
 
+<<<<<<< HEAD
 def format_item(item):
     return "{} ({})".format(
         web.try_shorten(item.link),
         formatting.strip_html(item.title))
 
+=======
+>>>>>>> 0cdd26e6424d1347be785a95dfe7e82011ccc32d
 @hook.command('news')
 def news(bot):
     feed = parse("https://www.bungie.net/en/Rss/NewsByCategory?category=destiny&currentpage=1&itemsPerPage=1")
     if not feed.entries:
         return "Feed not found."
 
+<<<<<<< HEAD
     start = "\x02{}\x02: ".format(feed.feed.title) if 'title' in feed.feed else ""
     return "{}{}".format(start, format_item(item))
+=======
+    return "{} - {}".format(
+        feed['entries'][0]['summary'],
+        try_shorten(feed['entries'][0]['link']))
+>>>>>>> 0cdd26e6424d1347be785a95dfe7e82011ccc32d
