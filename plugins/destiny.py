@@ -448,28 +448,15 @@ def collection(text, nick, bot):
                 found_frags.append([card['cardId']])
             elif card['cardId'] == 103094:
                 ghosts = card['statisticCollection'][0]['displayValue']
-<<<<<<< HEAD
                 if int(ghosts) >= 99:
                     ghosts = 99
         output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}'.format(
-||||||| merged common ancestors
-                if int(ghosts) >= 98:
-                    ghosts = 98
-        output.append("{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}".format(
-=======
-                if int(ghosts) >= 99:
-                    ghosts = 99
-        output.append("{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}".format(
->>>>>>> a598bbb3e9645324089cf2b3c662ab797770d333
             CONSOLES[console - 1], grimoire['score'], CACHE['collections']['grim_tally'],
             ghosts, CACHE['collections']['ghost_tally'],
             len(found_frags), len(CACHE['collections']['fragments']))
         )
     return output
 
-<<<<<<< HEAD
-||||||| merged common ancestors
-
 #@hook.command('ghosts')
 def ghosts(text, nick, bot):
     text = nick if not text else text
@@ -479,31 +466,7 @@ def ghosts(text, nick, bot):
     output = []
     for console in membership:
         data = get(
-            "{}Vanguard/Grimoire/{}/{}/"
-            .format(BASE_URL, console, membership[console]['membershipId']),
-            headers=HEADERS
-        ).json()['Response']['data']['cardCollection']
-        for card in data:
-            if card['cardId'] == 103094:
-                output.append('{}: {} out of 98'.format(
-                    CONSOLES[console - 1],
-                    card['statisticCollection'][0]['displayValue'])
-                )
-    return output
-
-
-=======
-
-#@hook.command('ghosts')
-def ghosts(text, nick, bot):
-    text = nick if not text else text
-    membership = get_user(text)
-    if type(membership) == str:
-        return membership
-    output = []
-    for console in membership:
-        data = get(
-            "{}Vanguard/Grimoire/{}/{}/"
+            '{}Vanguard/Grimoire/{}/{}/'
             .format(BASE_URL, console, membership[console]['membershipId']),
             headers=HEADERS
         ).json()['Response']['data']['cardCollection']
@@ -515,8 +478,6 @@ def ghosts(text, nick, bot):
                 )
     return output
 
-
->>>>>>> a598bbb3e9645324089cf2b3c662ab797770d333
 @hook.command('link')
 def link(text, nick, bot):
     text = text.lower().split(' ')
