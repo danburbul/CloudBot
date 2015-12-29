@@ -192,33 +192,28 @@ def compile_stats(text, nick, bot, opts, defaults, st_type):
         output.append("{}: {}".format(CONSOLES[console - 1], ", ".join(tmp_out)))
     return "; ".join(output)
 
-
 @hook.on_start()
 def load_cache(bot):
-    """Load in our pickle cache and the Headers"""
+    '''Load in our pickle cache and the Headers'''
     global HEADERS
-    HEADERS = {"X-API-Key": bot.config.get("api_keys", {}).get("destiny", None)}
+    HEADERS = {'X-API-Key': bot.config.get('api_keys', {}).get('destiny', None)}
     try:
         with open('destiny_cache', 'rb') as f:
             global CACHE
             CACHE = load(f)  # and the pickles!!!
     except EOFError:
         CACHE = {}
-    except FileNotFoundError:
-        CACHE = {}
+    CACHE.pop('collections', None)
     if not CACHE.get('links'):
         CACHE['links'] = {}
     if not CACHE.get('collections'):
-        CACHE['collections'] = {'ghost_tally': 98}
+        CACHE['collections'] = {'ghost_tally': 99}
     try:
         with open('lore_cache', 'rb') as f:
             global LORE_CACHE
             LORE_CACHE = load(f)  # and the pickles!!!
     except EOFError:
         LORE_CACHE = {}
-    except FileNotFoundError:
-        LORE_CACHE = {}
-
 
 @hook.command('save')
 def save_cache():
@@ -547,8 +542,8 @@ def collection(text, nick, bot):
                 found_frags.append([card['cardId']])
             elif card['cardId'] == 103094:
                 ghosts = card['statisticCollection'][0]['displayValue']
-                if int(ghosts) >= 98:
-                    ghosts = 98
+                if int(ghosts) >= 99:
+                    ghosts = 99
         output.append("{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}".format(
             CONSOLES[console - 1], grimoire['score'], CACHE['collections']['grim_tally'],
             ghosts, CACHE['collections']['ghost_tally'],
@@ -572,7 +567,7 @@ def ghosts(text, nick, bot):
         ).json()['Response']['data']['cardCollection']
         for card in data:
             if card['cardId'] == 103094:
-                output.append('{}: {} out of 98'.format(
+                output.append('{}: {} out of 99'.format(
                     CONSOLES[console - 1],
                     card['statisticCollection'][0]['displayValue'])
                 )
