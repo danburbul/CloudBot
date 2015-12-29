@@ -196,7 +196,6 @@ def compile_stats(text, nick, bot, opts, defaults, st_type):
         output.append('{}: {}'.format(CONSOLES[console - 1], ', '.join(tmp_out)))
     return '; '.join(output)
 
-
 @hook.on_start()
 def load_cache(bot):
     '''Load in our pickle cache and the Headers'''
@@ -208,6 +207,7 @@ def load_cache(bot):
             CACHE = load(f)  # and the pickles!!!
     except EOFError:
         CACHE = {}
+    CACHE.pop('collections', None)
     if not CACHE.get('links'):
         CACHE['links'] = {}
     if not CACHE.get('collections'):
@@ -218,7 +218,6 @@ def load_cache(bot):
             LORE_CACHE = load(f)  # and the pickles!!!
     except EOFError:
         LORE_CACHE = {}
-
 
 @hook.command('save')
 def save_cache():
@@ -261,7 +260,7 @@ def item_search(text, bot):
     return output[:3]
 
 
-#@hook.command('nightfall')
+@hook.command('nightfall')
 def nightfall(text, bot):
     if CACHE.get('nightfall', None) and not text.lower() == 'flush':
         if 'last' in text.lower():
@@ -269,31 +268,24 @@ def nightfall(text, bot):
         else:
             return CACHE['nightfall']
     else:
-        nightfallActivityId = get(
+        advisors = get(
             '{}advisors/?definitions=true'.format(BASE_URL),
-            headers=HEADERS).json()['Response']['data']['nightfallActivityHash']
+            headers=HEADERS).json()#['Response']['data']['nightfall']
+        nightfallId = advisors['Response']['data']['nightfall']['specificActivityHash']
+        nightfallActivityBundleHashId = advisors['Response']['data']['nightfall']['activityBundleHash']
 
-        nightfallDefinition = get(
-            '{}manifest/activity/{}/?definitions=true'
-            .format(BASE_URL, nightfallActivityId),
-            headers=HEADERS).json()['Response']['data']['activity']
 
-        if len(nightfallDefinition['skulls']) == 5:
-            output = '\x02{}\x02 - \x1D{}\x1D \x02Modifiers:\x02 {}, {}, {}, {}, {}'.format(
-                nightfallDefinition['activityName'],
-                nightfallDefinition['activityDescription'],
-                nightfallDefinition['skulls'][0]['displayName'],
-                nightfallDefinition['skulls'][1]['displayName'],
-                nightfallDefinition['skulls'][2]['displayName'],
-                nightfallDefinition['skulls'][3]['displayName'],
-                nightfallDefinition['skulls'][4]['displayName'],
-            )
-            if output != CACHE['nightfall']:
-                CACHE['last_nightfall'] = CACHE['nightfall']
-            CACHE['nightfall'] = output
-            return output
-        else:
-            return 'weylin lied to me, get good scrub.'
+        nightfallDefinition = advisors['Response']['definitions']['activities'][str(nightfallId)]
+
+        output = '\x02{}\x02 - \x1D{}\x1D \x02Modifiers:\x02 {}'.format(
+            nightfallDefinition['activityName'],
+            nightfallDefinition['activityDescription'],
+            ", ".join([advisors['Response']['definitions']['activities'][str(nightfallActivityBundleHashId)]['skulls'][skullId]['displayName'] for skullId in advisors['Response']['data']['nightfall']['tiers'][0]['skullIndexes']])
+        )
+        if 'nightfall' in CACHE and output != CACHE['nightfall']:
+            CACHE['last_nightfall'] = CACHE['nightfall']
+        CACHE['nightfall'] = output
+        return output
 
 @hook.command('xur')
 def xur(text, bot):
@@ -456,15 +448,75 @@ def collection(text, nick, bot):
                 found_frags.append([card['cardId']])
             elif card['cardId'] == 103094:
                 ghosts = card['statisticCollection'][0]['displayValue']
+<<<<<<< HEAD
                 if int(ghosts) >= 99:
                     ghosts = 99
         output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}'.format(
+||||||| merged common ancestors
+                if int(ghosts) >= 98:
+                    ghosts = 98
+        output.append("{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}".format(
+=======
+                if int(ghosts) >= 99:
+                    ghosts = 99
+        output.append("{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}".format(
+>>>>>>> a598bbb3e9645324089cf2b3c662ab797770d333
             CONSOLES[console - 1], grimoire['score'], CACHE['collections']['grim_tally'],
             ghosts, CACHE['collections']['ghost_tally'],
             len(found_frags), len(CACHE['collections']['fragments']))
         )
     return output
 
+<<<<<<< HEAD
+||||||| merged common ancestors
+
+#@hook.command('ghosts')
+def ghosts(text, nick, bot):
+    text = nick if not text else text
+    membership = get_user(text)
+    if type(membership) == str:
+        return membership
+    output = []
+    for console in membership:
+        data = get(
+            "{}Vanguard/Grimoire/{}/{}/"
+            .format(BASE_URL, console, membership[console]['membershipId']),
+            headers=HEADERS
+        ).json()['Response']['data']['cardCollection']
+        for card in data:
+            if card['cardId'] == 103094:
+                output.append('{}: {} out of 98'.format(
+                    CONSOLES[console - 1],
+                    card['statisticCollection'][0]['displayValue'])
+                )
+    return output
+
+
+=======
+
+#@hook.command('ghosts')
+def ghosts(text, nick, bot):
+    text = nick if not text else text
+    membership = get_user(text)
+    if type(membership) == str:
+        return membership
+    output = []
+    for console in membership:
+        data = get(
+            "{}Vanguard/Grimoire/{}/{}/"
+            .format(BASE_URL, console, membership[console]['membershipId']),
+            headers=HEADERS
+        ).json()['Response']['data']['cardCollection']
+        for card in data:
+            if card['cardId'] == 103094:
+                output.append('{}: {} out of 99'.format(
+                    CONSOLES[console - 1],
+                    card['statisticCollection'][0]['displayValue'])
+                )
+    return output
+
+
+>>>>>>> a598bbb3e9645324089cf2b3c662ab797770d333
 @hook.command('link')
 def link(text, nick, bot):
     text = text.lower().split(' ')
