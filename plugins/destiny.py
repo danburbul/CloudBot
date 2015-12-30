@@ -74,6 +74,7 @@ def get_user(user_name):
             for character in characterHash['characters']:
                 character_dict[character['characterBase']['characterId']] = {
                     'level': character['characterLevel'],
+                    'LL': character['characterBase']['powerLevel'],
                     'race': RACE_HASH[character['characterBase']['raceHash']],
                     'class': CLASS_HASH[character['characterBase']['classHash']]
                 }
@@ -410,7 +411,7 @@ def lore(text, bot, notice):
 
 @hook.command('pvp')
 def pvp(text, nick, bot):
-    defaults = ['k/d', 'k/h', 'd/h', 'kills', 'bestSingleGameKills', 
+    defaults = ['k/d', 'k/h', 'd/h', 'kills', 'bestSingleGameKills',
         'longestKillSpree', 'bestWeapon', 'secondsPlayed']
     return compile_stats(
         text=text,
