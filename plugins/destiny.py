@@ -23,7 +23,7 @@ WEAPON_TYPES = ['Super', 'Melee', 'Grenade', 'AutoRifle', 'FusionRifle',
 WEAPON_CLASSES = {"PrimaryWeapon": ['HandCannon', 'AutoRifle', 'PulseRifle',
                                     'ScoutRifle'],
                   "SpecialWeapon": ['FusionRifle', 'Shotgun', 'Sniper', 'SideArm'],
-                  "HeavyWeapon": ['Machinegun', 'Submachinegun', 'RocketLauncher', 
+                  "HeavyWeapon": ['Machinegun', 'Submachinegun', 'RocketLauncher',
                                   'Relic'],
                   "Ability": ['Super', 'Melee', 'Grenade']}
 PVP_OPTS = ['activitiesEntered', 'assists', 'avgKillDistance', 'deaths', 'kills', 'k/d',
@@ -156,7 +156,7 @@ def get_stat(data, stat):
         orig_stat = stat[:-len("Percentage")]
         if orig_stat in WEAPON_TYPES:
             orig_stat = "weaponKills{0}".format(orig_stat)
-            return '\x02{0}\x02: {1}%'.format(stat, round( (data[orig_stat]['basic']['value'] / 
+            return '\x02{0}\x02: {1}%'.format(stat, round( (data[orig_stat]['basic']['value'] /
                                                             data['kills']['basic']['value']) * 100, 2))
         elif orig_stat in WEAPON_CLASSES:
             return '\x02{0}\x02: {1}%'.format(stat, round( (get_weaponclass_total(data, orig_stat) /
@@ -271,10 +271,6 @@ def compile_stats(text, nick, bot, opts, defaults, split_defaults, st_type, noti
         output.append('{}: {}'.format(CONSOLES[console - 1], ', '.join(tmp_out)))
     return '\x02{0}\x02: {1}'.format(target['nick'], '; '.join(output))
 
-# Sample input:
-# ['k/d', 'split']
-# ['tuzonghua', 'xbox']
-# ['tuzonghua']
 def compile_stats_arg_parse(text_arr, given_nick):
     '''Parse the input
 
@@ -309,7 +305,7 @@ def compile_stats_arg_parse(text_arr, given_nick):
                 for i, arg in enumerate(collect):
                     user = get_user(arg, CONSOLE2ID[console])
                     if not isinstance(user, str):
-                        # Gamertag given, found, remove it. 
+                        # Gamertag given, found, remove it.
                         collect.pop(i)
                         nick = arg
                         break
@@ -319,15 +315,15 @@ def compile_stats_arg_parse(text_arr, given_nick):
             if console:
                 # perfect, we can just return the user for it
                 t = get_user(check_arg, CONSOLE2ID[console])
-            else: 
+            else:
                 # not perfect, but give it a shot
                 t = get_user(check_arg)
 
             if not isinstance(t, str):
-                # XXX: Right now, the only string returned is "A user by 
+                # XXX: Right now, the only string returned is "A user by
                 # the name (nick) can't be found." So 'string' return
                 # type means that's the case; anything else is real,
-                # valid, good data. 
+                # valid, good data.
                 user = t
                 nick = check_arg
             else:
@@ -566,9 +562,13 @@ def lore(text, bot, notice):
 def collection(text, nick, bot):
     text = nick if not text else text
     membership = get_user(text)
+    links = CACHE['links'].get(nick)
+
     if type(membership) == str:
         return membership
+
     output = []
+
     for console in membership:
         grimoire = get(
             '{}Vanguard/Grimoire/{}/{}/'
@@ -588,11 +588,25 @@ def collection(text, nick, bot):
                 ghosts = card['statisticCollection'][0]['displayValue']
                 if int(ghosts) >= 99:
                     ghosts = 99
-        output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}'.format(
-            CONSOLES[console - 1], grimoire['score'], CACHE['collections']['grim_tally'],
-            ghosts, CACHE['collections']['ghost_tally'],
-            len(found_frags), len(CACHE['collections']['fragments']))
-        )
+
+        if console == 1:
+            platform = "xbl"
+        else:
+            platform = "psn"
+
+        output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{} - {}'.format(
+            CONSOLES[console - 1],
+            grimoire['score'],
+            CACHE['collections']['grim_tally'],
+            ghosts,
+            CACHE['collections']['ghost_tally'],
+            len(found_frags),
+            len(CACHE['collections']['fragments']),
+            try_shorten('http://destinystatus.com/{}/{}/grimoire'.format(
+                platform,
+                links[console]
+            ))
+        ))
     return output
 
 @hook.command('link')
