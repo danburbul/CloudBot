@@ -1,6 +1,7 @@
 import datetime
 import json
 from cloudbot import hook
+from cloudbot.event import EventType
 from html.parser import HTMLParser
 from random import choice, sample
 from requests import get
@@ -12,6 +13,7 @@ BASE_URL = 'https://www.bungie.net/platform/Destiny/'
 CACHE = {}
 CLASS_TYPES = {0: 'Titan ', 1: 'Hunter ', 2: 'Warlock ', 3: ''}
 CLASS_HASH = {671679327: 'Hunter', 3655393761: 'Titan', 2271682572: 'Warlock'}
+DISCORD_USER = "katagatame_"
 RACE_HASH = {898834093: 'Exo', 3887404748: 'Human', 2803282938: 'Awoken'}
 CONSOLES = ['\x02\x033Xbox\x02\x03', '\x02\x0312Playstation\x02\x03']
 STAT_HASHES = {144602215: 'Int', 1735777505: 'Disc', 4244567218: 'Str'}
@@ -64,6 +66,7 @@ def string_to_datetime(datetime_as_string):
 
 def datetime_to_string(datetime_object):
     return datetime.datetime.strftime(datetime_object,'%Y-%m-%dT%H:%M:%SZ')
+
 
 def get_user(user_name, console=None):
     '''
@@ -122,24 +125,28 @@ def prepare_lore_cache():
     LORE_CACHE = {}
     grim_tally = 0
     fragments = {}
+    siva = {}
     for level1 in lore_base:
         if level1.get('themeId','') == 'Enemies':
             for page in level1['pageCollection']:
                 if page['pageId'] == 'BooksofSorrow':
                     for card in page['cardCollection']:
                         fragments[card['cardId']] = card['cardName']
+                if page['pageId'] == 'Siva':
+                    for card in page['cardCollection']:
+                        siva[card['cardId']] = card['cardName']
         for level2 in level1.get('pageCollection', []):
             for card in level2.get('cardCollection', []):
                 LORE_CACHE[card['cardName']] = {
                     'cardIntro': card.get('cardIntro', ''),
-                    'cardDescription': card['cardDescription'],
+                   # 'cardDescription': card['cardDescription'],
                     'cardId': card['cardId']
                 }
             for card in level2.get('cardBriefs', []):
                 grim_tally += card.get('totalPoints', 0)
     CACHE['collections']['grim_tally'] = grim_tally
     CACHE['collections']['fragments'] = fragments
-
+    CACHE['collections']['siva'] = siva
 
 def best_weapon(data):
     best = 0
@@ -227,7 +234,7 @@ def load_cache(bot):
     if not CACHE.get('links'):
         CACHE['links'] = {}
     if not CACHE.get('collections'):
-        CACHE['collections'] = {'ghost_tally': 99}
+        CACHE['collections'] = {'ghost_tally': 142}
     try:
         with open('lore_cache', 'rb') as f:
             global LORE_CACHE
@@ -236,6 +243,12 @@ def load_cache(bot):
         LORE_CACHE = {}
     except FileNotFoundError:
         LORE_CACHE = {}
+
+@hook.event([EventType.message, EventType.action], singlethread=True)
+def discord_tracker(event, db, conn):
+    if event.nick == 'DTG' and 'Command sent from Discord by' in event.content:
+        global DISCORD_USER
+        DISCORD_USER = event.content[event.content.find("by") + 3: -1]
 
 def compile_stats(text, nick, bot, opts, defaults, split_defaults, st_type, notice):
     if not text:
@@ -371,6 +384,8 @@ def compile_stats_arg_parse(text_arr, given_nick):
 
 @hook.command('pvp')
 def pvp(text, nick, bot, notice):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     defaults = ['k/d', 'k/h', 'd/h', 'kills', 'bestSingleGameKills',
         'longestKillSpree', 'bestWeapon', 'secondsPlayed']
     split_defaults = ['k/d']
@@ -387,6 +402,8 @@ def pvp(text, nick, bot, notice):
 
 @hook.command('pve')
 def pve(text, nick, bot, notice):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     defaults = ['k/h', 'kills', 'activitiesCleared', 'longestKillSpree',
         'bestWeapon', 'secondsPlayed']
     split_defaults = ['k/d']
@@ -540,7 +557,7 @@ def weekly(text,bot):
     for skullCategory in advisors['activities']['heroicstrike']['extended']['skullCategories']:
         for skull in skullCategory['skulls']:
             heroicstrike.append(skull['displayName'])
-
+            
     new_weekly = { 
             'expiration': advisors['activities']['weeklycrucible']['status']['expirationDate'], 
             'output': '\x02Weekly activities:\x02 {} || {} || {} || {} || Heroic Strikes: {}'.format(
@@ -550,7 +567,6 @@ def weekly(text,bot):
                 coo_t3(datetime.date.today()), 
                 ', '.join(heroicstrike)
                 ) 
-            }
 
     if 'weekly' in CACHE and new_weekly != CACHE['weekly']:
         CACHE['last_weekly'] = CACHE['weekly']
@@ -770,14 +786,16 @@ def lore(text, bot, notice):
 
 @hook.command('collection')
 def collection(text, nick, bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     if text:
-        if text.split(' ').pop().lower() in ['xb1','xb','xbl','xbox']: 
+        if text.split(' ').pop().lower() in ['xb1','xb','xbl','xbox']:
             membership = get_user(' '.join(text.split(' ')[0:len(text.split(' '))-1]),1)
             links = { 1: membership[1]['displayName']}
-        elif text.split(' ').pop().lower() in ['psn','ps','playstation','ps4']: 
+        elif text.split(' ').pop().lower() in ['psn','ps','playstation','ps4']:
             membership = get_user(' '.join(text.split(' ')[0:len(text.split(' '))-1]),2)
             links = { 2: membership[2]['displayName']}
-        else: 
+        else:
             membership = get_user(text)
             if type(membership) == str:
                 return 'A user by the name of {} was not found. Try specifying platform: psn or xbl'.format(text)
@@ -797,6 +815,7 @@ def collection(text, nick, bot):
             headers=HEADERS
         ).json()['Response']['data']
         found_frags = []
+        found_siva = []
         ghosts = 0
         for card in grimoire['cardCollection']:
             if 'fragments' not in CACHE['collections']:
@@ -807,15 +826,15 @@ def collection(text, nick, bot):
                 found_frags.append([card['cardId']])
             elif card['cardId'] == 103094:
                 ghosts = card['statisticCollection'][0]['displayValue']
-                if int(ghosts) >= 99:
-                    ghosts = 99
+            if card['cardId'] in CACHE['collections']['siva']:
+               found_siva.append([card['cardId']])
 
         if console == 1:
             platform = "xbl"
         else:
             platform = "psn"
 
-        output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{} - {}'.format(
+        output.append('{}: Grimoire {}/{}, Ghosts {}/{}, Fragments {}/{}, SIVA {}/{} - {}'.format(
             CONSOLES[console - 1],
             grimoire['score'],
             CACHE['collections']['grim_tally'],
@@ -823,6 +842,8 @@ def collection(text, nick, bot):
             CACHE['collections']['ghost_tally'],
             len(found_frags),
             len(CACHE['collections']['fragments']),
+            len(found_siva) -1,
+            len(CACHE['collections']['siva']) -1, #There are 31 cards, but only 30 associated with Cluster Pick-ups.
             try_shorten('http://destinystatus.com/{}/{}/grimoire'.format(
                 platform,
                 links[console]
@@ -832,6 +853,8 @@ def collection(text, nick, bot):
 
 @hook.command('link')
 def link(text, nick, bot, notice):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     text = text.lower().split(' ')
     err_msg = 'Invalid use of link command. Use: !link <gamertag> <xbl/psn>'
 
@@ -883,6 +906,8 @@ def migrate(text, nick, bot):
 
 @hook.command('purge')
 def purge(text, nick, bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     membership = get_user(nick)
 
     if type(membership) is not dict:
@@ -890,22 +915,26 @@ def purge(text, nick, bot):
     user_name = nick
     output = []
     text = '' if not text else text
-
-    if text.lower() == 'xbl' and membership.get(1, False):
-        del membership[1]
-        output.append('Removed Xbox from my cache on {}.'.format(user_name))
-    if text.lower() == 'psn' and membership.get(2, False):
-        del membership[2]
-        output.append('Removed Playstation from my cache on {}.'.format(user_name))
-    if not text or not membership:
-        del CACHE[user_name]
-        return 'Removed {}\'s characters from my cache.'.format(nick)
-    else:
-        CACHE[user_name] = membership
-        return output if output else 'Nothing to purge. WTF you doin?!'
+    try:
+        if text.lower() == 'xbl' and membership.get(1, False):
+            del membership[1]
+            output.append('Removed Xbox from my cache on {}.'.format(user_name))
+        if text.lower() == 'psn' and membership.get(2, False):
+            del membership[2]
+            output.append('Removed Playstation from my cache on {}.'.format(user_name))
+        if not text or not membership:
+            del CACHE[user_name]
+            return 'Removed {}\'s characters from my cache.'.format(nick)
+        else:
+            CACHE[user_name] = membership
+            return output if output else 'Nothing to purge. WTF you doin?!'
+    except KeyError:
+        return 'Bro, do you even purge?!'
 
 @hook.command('profile')
 def profile(text, nick, bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     text = nick if not text else text
     membership = get_user(text)
     if type(membership) is not dict:
@@ -928,6 +957,8 @@ def profile(text, nick, bot):
 
 @hook.command('chars')
 def chars(text, nick, bot, notice):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     text = nick if not text else text
     text = text.split(' ')
     CONSOLE2ID = {"xbox": 1, "playstation": 2}
@@ -968,6 +999,8 @@ def chars(text, nick, bot, notice):
 
 @hook.command('triumphs')
 def triumphs(text,nick,bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     Y2_MOT_HASH = {
         '1872531696':'Challenge of the Elders',
         '1872531697':'The Play\'s the Thing',
@@ -1003,14 +1036,72 @@ def triumphs(text,nick,bot):
             output.append(', '.join(missing))
     return ' '.join(output)
 
+
+@hook.command('wasted')
+def wasted(text,nick,bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
+    if text:
+        if text.split(' ').pop().lower() in ['xb1','xb','xbl','xbox']:
+            membership = get_user(
+                ' '.join(text.split(' ')[0:len(text.split(' '))-1]),1)
+        elif text.split(
+            ' ').pop().lower() in ['psn','ps','playstation','ps4']:
+            membership = get_user(
+                ' '.join(text.split(' ')[0:len(text.split(' '))-1]),2)
+        else:
+            membership = get_user(text)
+            if type(membership) == str:
+                return 'A user by the name of {} was not found. \
+                Try specifying platform: psn or xbl'.format(text)
+    else:
+        membership = get_user(nick)
+
+    if type(membership) == str:
+        return membership
+
+    for platform in zip([1,2], ['xbox', 'playstation']):
+
+        if platform[0] in membership:
+            displayname = membership[platform[0]]['displayName']
+
+            output = []
+            blue = '\x02\x0312'
+            red = '\x02\x034'
+            end = '\x02\x03'
+            """ I'm setting these colors so that the output append is easier
+            to read. Also would like to expand defaults globally in the script
+            to make output easier to read and format. I'm not sure my names are
+            correct for the actual color being displayed though. """
+
+            waste = get(
+                'https://www.wastedondestiny.com/api/?console={}&user={}'.format(
+                    platform[0], displayname))
+            data = waste.json()  # Convert our get to json formatted data.
+
+            if data['Response'][platform[1]]:
+                timePlayed = (data['Response'][platform[1]].get('timePlayed', 0))
+                totalTimePlayed = str(datetime.timedelta(seconds=timePlayed))
+
+                timeWasted = (data['Response'][platform[1]].get('timeWasted', 0))
+                totalTimeWasted = str(datetime.timedelta(seconds=timeWasted))
+
+                output.append('{}Total:{} {} || {}Wasted:{} {}'.format(blue, end,
+                    totalTimePlayed, red, end, totalTimeWasted))
+
+                return output
+
+
 @hook.command('lastpvp')
 def lastpvp(text,nick,bot):
+    if nick == 'DTG':
+        nick = DISCORD_USER
     if text:
-        if text.split(' ').pop().lower() in ['xb1','xb','xbl','xbox']: 
+        if text.split(' ').pop().lower() in ['xb1','xb','xbl','xbox']:
             membership = get_user(' '.join(text.split(' ')[0:len(text.split(' '))-1]),1)
-        elif text.split(' ').pop().lower() in ['psn','ps','playstation','ps4']: 
+        elif text.split(' ').pop().lower() in ['psn','ps','playstation','ps4']:
             membership = get_user(' '.join(text.split(' ')[0:len(text.split(' '))-1]),2)
-        else: 
+        else:
             membership = get_user(text)
             if type(membership) == str:
                 return 'A user by the name of {} was not found. Try specifying platform: psn or xbl'.format(text)
@@ -1036,17 +1127,17 @@ def lastpvp(text,nick,bot):
             output.append( '(' + CONSOLES[platform-1] + ')')
             if activity['values']['standing']['basic']['displayValue'] in ['Victory','1','2','3']:
                 output.append(
-                    '\x02\x033\u2713 ' + 
+                    '\x02\x033\u2713 ' +
                     get('{}Manifest/2/{}/'.format(
                         BASE_URL, activity['activityDetails']['activityTypeHashOverride']),
-                        headers=HEADERS).json()['Response']['data']['activityType']['activityTypeName']  + 
+                        headers=HEADERS).json()['Response']['data']['activityType']['activityTypeName']  +
                     '\x03\x02:')
             else:
                 output.append(
-                    '\x02\x034\u2717 ' + 
+                    '\x02\x034\u2717 ' +
                     get('{}Manifest/2/{}/'.format(
                         BASE_URL, activity['activityDetails']['activityTypeHashOverride']),
-                        headers=HEADERS).json()['Response']['data']['activityType']['activityTypeName']  + 
+                        headers=HEADERS).json()['Response']['data']['activityType']['activityTypeName']  +
                     '\x03\x02:')
             output.append(
                 ', '.join([
@@ -1092,18 +1183,6 @@ def coo(bot):
 def rules(bot):
     return 'Check \'em! https://www.reddit.com/r/DestinyTheGame/wiki/irc'
 
-@hook.command('compare')
-def compare(text, bot):
-    return 'Do it your fucking self, lazy bastard!'
-
-@hook.command('ping')
-def ping(text, bot):
-    return 'pong'
-
-@hook.command('ooboo')
-def ooboo(text, bot):
-    return 'https://www.youtube.com/watch?v=HJKW2ZcRtMY'
-
 @hook.command('100')
 def the100(bot):
     return 'Check out our The100.io group here: https://www.the100.io/g/1151'
@@ -1121,13 +1200,3 @@ def news(bot):
     return '{} - {}'.format(
         feed['entries'][0]['summary'],
         try_shorten(feed['entries'][0]['link']))
-
-@hook.command('elo')
-def elo(bot):
-    lulz = [
-        'https://cdn.meme.am/instances/400x/54585027.jpg',
-        'http://blooperman.com/wp-content/uploads/2015/10/elo.jpg',
-        'http://blogs.discovermagazine.com/80beats/files/2011/07/Jello.jpg',
-        'https://media.giphy.com/media/3o7qEccSvsVHNT17Xi/giphy.gif'
-    ]
-    return try_shorten(choice(lulz))
